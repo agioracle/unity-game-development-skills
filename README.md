@@ -1,33 +1,36 @@
 # Unity Game Development Skills
 
+English | [简体中文](README.zh-CN.md)
+
 AI Agent Skill for building, refactoring, reviewing, and shipping Unity games.
 
-本仓库提供一套面向 AI Agent 的 Unity 游戏开发技能包，包含开发流程、项目规范、检查清单、常用代码模板和辅助脚本。它不是一个可直接用 Unity Editor 打开的 Unity 工程，而是用于指导 Agent 在真实 Unity 项目中更可靠地完成开发任务的 Skills。
+This repository provides a Unity game development skill package for AI agents. It includes development workflows, project conventions, checklists, reusable templates, and helper scripts. It is not a Unity project that should be opened directly in Unity Editor. Instead, it is a guidance package for helping agents work more reliably inside real Unity projects.
 
-## 适用场景
+## When to Use This Skill
 
-当任务涉及以下内容时，可以使用本 Skill：
+Use this skill when a task involves:
 
-- 创建、修改或调试 Unity 游戏项目
-- 编写 `MonoBehaviour`、`ScriptableObject`、Prefab、Scene、UI、输入和玩法系统
-- 搭建最小可玩闭环、关卡流程、GameManager、对象池、事件总线等基础架构
-- 处理 Addressables、存档、本地化、TextMeshPro、Input System 等 Unity 常见模块
-- 面向 PC、移动端、WebGL、微信小游戏、抖音小游戏等平台做性能和构建适配
-- 对 Unity 项目做结构整理、代码审查、性能优化或交付前检查
+- Creating, modifying, or debugging Unity game projects
+- Writing `MonoBehaviour`, `ScriptableObject`, Prefab, Scene, UI, input, or gameplay systems
+- Building a minimum playable loop, level flow, `GameManager`, object pool, event bus, or other gameplay foundations
+- Working with Addressables, save data, localization, TextMeshPro, Input System, and other common Unity modules
+- Preparing builds or optimizations for PC, mobile, WebGL, WeChat Mini Game, Douyin Mini Game, and similar platforms
+- Reviewing Unity project structure, code quality, performance, or release readiness
 
-## 重要说明：目录名
+## Skill Directory
 
-当前 Skill 目录名为：
+The skill directory is:
 
 ```text
 unity-game-development-skills
 ```
 
-## 仓库结构
+## Repository Layout
 
 ```text
 .
 ├── README.md
+├── README.zh-CN.md
 ├── LICENSE
 └── unity-game-development-skills/
     ├── SKILL.md
@@ -37,103 +40,103 @@ unity-game-development-skills
     └── scripts/
 ```
 
-| 路径 | 说明 |
+| Path | Description |
 | --- | --- |
-| `unity-game-development-skills/SKILL.md` | Skill 主入口，定义触发场景、工作原则、标准流程和交付格式。 |
-| `unity-game-development-skills/references/` | Unity 开发规范、平台约束、检查清单和专项指南。 |
-| `unity-game-development-skills/assets/templates/` | 可复制到 Unity 项目中的 C# / XML 模板，文件以 `.txt` 保存以避免被误编译。 |
-| `unity-game-development-skills/scripts/` | 辅助脚本，目前包含 Unity 项目目录结构初始化脚本。 |
-| `LICENSE` | MIT License。 |
+| `unity-game-development-skills/SKILL.md` | Main skill entry point. Defines triggers, principles, workflow, and delivery format. |
+| `unity-game-development-skills/references/` | Unity development conventions, platform constraints, checklists, and focused guides. |
+| `unity-game-development-skills/assets/templates/` | C# / XML templates that can be copied into Unity projects. They use `.txt` to avoid accidental compilation. |
+| `unity-game-development-skills/scripts/` | Helper scripts, currently including a Unity project structure initializer. |
+| `LICENSE` | MIT License. |
 
-## 安装方式
+## Installation
 
-将整个 Skill 目录复制到你的 Agent skills 目录中：
+Copy the whole skill directory into your agent's skills directory:
 
 ```text
 unity-game-development-skills/
 ```
 
-入口文件是：
+The entry file is:
 
 ```text
 unity-game-development-skills/SKILL.md
 ```
 
-不同 Agent 的 skills 安装目录可能不同，请按所使用工具的 Skill 安装说明放置该目录。
+Different agents may use different skill installation locations. Follow the installation instructions for the agent tool you use.
 
-## 推荐工作流
+## Recommended Workflow
 
-`SKILL.md` 定义了处理 Unity 任务时的标准流程：
+`SKILL.md` defines the standard workflow for Unity tasks:
 
-1. **Discover**：先读取项目状态，包括 Unity 版本、Packages、ProjectSettings、渲染管线、输入系统和现有目录结构。
-2. **Plan**：先规划最小可玩闭环和需要改动的文件，避免过度重构。
-3. **Implement**：按编码规范、玩法模式、UI 输入、数据配置和平台性能要求实现。
-4. **Verify**：按交付清单自检，确保代码可编译、可验证、可继续迭代。
-5. **Report**：交付时说明完成内容、文件变更、Unity 中需要操作、验证方式和注意事项。
+1. **Discover**: Inspect the project state first, including Unity version, packages, ProjectSettings, render pipeline, input system, and existing folder structure.
+2. **Plan**: Define the minimum playable loop and the files to change before implementing. Avoid unnecessary large refactors.
+3. **Implement**: Follow the coding, gameplay, UI/input, data/config, performance, and platform guidance.
+4. **Verify**: Use the delivery checklist to confirm the work can compile, be verified, and be iterated on.
+5. **Report**: Summarize completed work, changed files, Unity-side actions, verification steps, and important notes.
 
-## 参考文档
+## Reference Documents
 
-| 文档 | 内容 |
+| Document | Content |
 | --- | --- |
-| `references/discovery-checklist.md` | Unity 任务开始前的项目发现清单。 |
-| `references/project-structure.md` | 推荐的 `Assets/_Project/` 目录结构、命名和 asmdef 放置规则。 |
-| `references/coding-standards.md` | C#、`MonoBehaviour`、生命周期、事件订阅和 Domain Reload 相关规范。 |
-| `references/gameplay-patterns.md` | GameManager、关卡、对象池、Prefab、场景职责等玩法架构模式。 |
-| `references/ui-input.md` | UI 层职责、Canvas 层级、Safe Area、新旧输入系统使用建议。 |
-| `references/data-config.md` | `ScriptableObject` 配置、运行时数据、Addressables、存档和本地化规范。 |
-| `references/performance-platform.md` | Update 热路径、GC、对象池、移动端、WebGL、小游戏平台和 IL2CPP 裁剪注意事项。 |
-| `references/delivery-checklist.md` | 交付前检查项、回复格式和 Unity 任务硬性禁忌。 |
+| `unity-game-development-skills/references/discovery-checklist.md` | Project discovery checklist before starting a Unity task. |
+| `unity-game-development-skills/references/project-structure.md` | Recommended `Assets/_Project/` layout, naming rules, and asmdef placement. |
+| `unity-game-development-skills/references/coding-standards.md` | C#, `MonoBehaviour`, lifecycle, event subscription, and Domain Reload conventions. |
+| `unity-game-development-skills/references/gameplay-patterns.md` | Gameplay architecture patterns for `GameManager`, levels, object pools, Prefabs, and scene responsibilities. |
+| `unity-game-development-skills/references/ui-input.md` | UI responsibilities, Canvas hierarchy, Safe Area handling, and legacy/new input system guidance. |
+| `unity-game-development-skills/references/data-config.md` | `ScriptableObject` configs, runtime data, Addressables, save data, and localization guidance. |
+| `unity-game-development-skills/references/performance-platform.md` | Update hot paths, GC, object pooling, mobile, WebGL, mini-game platforms, and IL2CPP stripping notes. |
+| `unity-game-development-skills/references/delivery-checklist.md` | Pre-delivery checklist, response format, and hard rules for Unity tasks. |
 
-## 代码模板
+## Templates
 
-模板位于：
+Templates are located in:
 
 ```text
 unity-game-development-skills/assets/templates/
 ```
 
-| 模板 | 建议复制到 Unity 项目的位置 | 用途 |
+| Template | Suggested Unity project path | Purpose |
 | --- | --- | --- |
-| `EventBus.cs.txt` | `Assets/_Project/Code/Runtime/Core/EventBus.cs` | 类型安全事件总线。 |
-| `GameManager.cs.txt` | `Assets/_Project/Code/Runtime/Core/GameManager.cs` | 基础游戏状态机。 |
-| `HUDView.cs.txt` | `Assets/_Project/Code/Runtime/UI/HUDView.cs` | HUD 表现层模板。 |
-| `InputReader.cs.txt` | `Assets/_Project/Code/Runtime/Input/InputReader.cs` | 新 Input System 输入读取器模板。 |
-| `MonoSingleton.cs.txt` | `Assets/_Project/Code/Runtime/Core/MonoSingleton.cs` | 泛型 `MonoBehaviour` 单例基类。 |
-| `SimpleObjectPool.cs.txt` | `Assets/_Project/Code/Runtime/Systems/SimpleObjectPool.cs` | 简单对象池实现。 |
-| `link.xml.txt` | `Assets/link.xml` | IL2CPP / Managed Code Stripping 保留配置模板。 |
+| `EventBus.cs.txt` | `Assets/_Project/Code/Runtime/Core/EventBus.cs` | Type-safe event bus. |
+| `GameManager.cs.txt` | `Assets/_Project/Code/Runtime/Core/GameManager.cs` | Basic game state machine. |
+| `HUDView.cs.txt` | `Assets/_Project/Code/Runtime/UI/HUDView.cs` | HUD presentation-layer template. |
+| `InputReader.cs.txt` | `Assets/_Project/Code/Runtime/Input/InputReader.cs` | Input reader template for the new Input System. |
+| `MonoSingleton.cs.txt` | `Assets/_Project/Code/Runtime/Core/MonoSingleton.cs` | Generic `MonoBehaviour` singleton base class. |
+| `SimpleObjectPool.cs.txt` | `Assets/_Project/Code/Runtime/Systems/SimpleObjectPool.cs` | Simple object pool implementation. |
+| `link.xml.txt` | `Assets/link.xml` | IL2CPP / Managed Code Stripping preservation config template. |
 
-使用模板时请注意：
+When using templates:
 
-- 复制到 Unity 项目后需要去掉 `.txt` 后缀。
-- 按目标项目修改 namespace、程序集和依赖。
-- 不要把整个 Skill 仓库直接拖入 Unity 项目作为可编译代码。
-- `InputReader.cs.txt` 依赖 Unity 新 Input System，并假设已生成 `GameInput` C# 类。
-- `HUDView.cs.txt` 使用 TextMeshPro，即 `TMPro` 命名空间。
+- Remove the `.txt` suffix after copying a template into a Unity project.
+- Adjust namespace, assembly references, and dependencies for the target project.
+- Do not drag the whole skill repository into a Unity project as compilable code.
+- `InputReader.cs.txt` depends on Unity's new Input System and assumes a generated `GameInput` C# class.
+- `HUDView.cs.txt` uses TextMeshPro via the `TMPro` namespace.
 
-## 初始化 Unity 项目目录结构
+## Initialize a Unity Project Structure
 
-可以使用脚本为目标 Unity 项目的 `Assets` 目录创建推荐结构：
+Use the helper script to create the recommended folder structure under a target Unity project's `Assets` directory:
 
 ```bash
 python3 unity-game-development-skills/scripts/init_unity_project_structure.py --path /absolute/path/to/UnityProject/Assets
 ```
 
-脚本默认会在 `Assets` 下创建 `_Project` 目录骨架和 `.gitkeep` 文件，不会创建脚本、场景或 Prefab，也不会修改 `Packages`、`ProjectSettings` 或已有文件。
+By default, the script creates an `_Project` folder tree and `.gitkeep` files under `Assets`. It does not create scripts, scenes, or Prefabs, and it does not modify `Packages`, `ProjectSettings`, or existing files.
 
-可选参数：
+Optional arguments:
 
 ```bash
-# 指定项目资源根目录名
+# Set a custom project asset root name
 python3 unity-game-development-skills/scripts/init_unity_project_structure.py --path /absolute/path/to/UnityProject/Assets --root MyProject
 
-# 显式创建 Resources 目录
+# Explicitly create a Resources directory
 python3 unity-game-development-skills/scripts/init_unity_project_structure.py --path /absolute/path/to/UnityProject/Assets --with-resources
 
-# 不创建 .gitkeep
+# Skip .gitkeep files
 python3 unity-game-development-skills/scripts/init_unity_project_structure.py --path /absolute/path/to/UnityProject/Assets --no-gitkeep
 ```
 
-推荐目录结构示例：
+Recommended layout example:
 
 ```text
 Assets/_Project/
@@ -150,17 +153,17 @@ Assets/_Project/
 └── StreamingAssets/
 ```
 
-默认不创建 `Resources/`，如确有需要请使用 `--with-resources`。
+`Resources/` is not created by default. Use `--with-resources` only when it is explicitly needed.
 
-## Unity 项目使用建议
+## Unity Project Guidance
 
-- 修改前先确认 Unity 版本、渲染管线、输入系统、脚本后端和平台目标。
-- 优先实现最小可玩闭环，再扩展表现、关卡、资源和平台适配。
-- 运行时热路径避免频繁 `FindObjectOfType`、`GetComponent`、LINQ、装箱和临时分配。
-- `MonoBehaviour` 尽量只作为 Unity 胶水层，核心业务逻辑优先拆到纯 C# 类。
-- `ScriptableObject` 适合作为静态配置，运行时状态应拆到 runtime model。
-- 面向 IL2CPP、WebGL 或小游戏平台时，注意代码裁剪、文件系统、音频解锁、内存峰值和异步加载限制。
+- Check Unity version, render pipeline, input system, scripting backend, and target platform before making changes.
+- Build the minimum playable loop first, then expand presentation, levels, assets, and platform adaptation.
+- Avoid frequent `FindObjectOfType`, `GetComponent`, LINQ, boxing, and temporary allocations in runtime hot paths.
+- Keep `MonoBehaviour` classes as Unity glue where possible, and move core business logic into plain C# classes.
+- Use `ScriptableObject` for static configuration; keep runtime state in separate runtime models.
+- For IL2CPP, WebGL, or mini-game platforms, pay attention to stripping, file-system limitations, audio unlock behavior, memory peaks, and async loading constraints.
 
-## 许可证
+## License
 
-本项目使用 [MIT License](LICENSE)。
+This project is licensed under the [MIT License](LICENSE).
