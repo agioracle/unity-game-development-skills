@@ -1,0 +1,162 @@
+// Template: minimal generic object pool for MonoBehaviour prefabs.
+// Copy to Assets/_Project/Code/Runtime/Systems/SimpleObjectPool.cs and adapt namespace.
+//
+// Why this exists:
+//   Unity 2021+ ships UnityEngine.Pool.ObjectPool<T> which is feature-complete.
+//   Prefer using it directly when the prefab is a Component / GameObject:
+//
+//     using UnityEngine.Pool;
+//     pool = new ObjectPool<Bullet>(
+//         createFunc:   () => Object.Instantiate(bulletPrefab, parent),
+//         actionOnGet:  b => b.gameObject.SetActive(true),
+//         actionOnRelease: b => b.gameObject.SetActive(false),
+//         actionOnDestroy: b => Object.Destroy(b.gameObject),
+//         collectionCheck: true,            // catches double-Release in Editor
+//         defaultCapacity: 32,
+//         maxSize: 256);
+//
+// Use this template ONLY if you need a tiny dependency-free wrapper, e.g.
+// for a code sample shown to designers. It mirrors UnityEngine.Pool's
+// safety semantics (max size, double-release detection, Clear).
+//
+// Usage:
+//   [SerializeField] private Bullet bulletPrefab;
+//   private SimpleObjectPool<Bullet> pool;
+//
+//   void Awake()  { pool = new SimpleObjectPool<Bullet>(bulletPrefab, prewarm: 16, maxSize: 128, parent: transform); }
+//   void Fire()   { var b = pool.Get(); b.transform.position = firePoint.position; }
+//   void OnHit(Bullet b) { pool.Release(b); }
+//   void OnDestroy() { pool.Clear(); }     // critical: drop refs on level exit
+
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace Project.Systems
+{
+    public interface IPoolable
+    {
+        void OnSpawn();
+        void OnDespawn();
+    }
+
+    public class SimpleObjectPool<T> where T : Component
+    {
+        private readonly T prefab;
+        private readonly Transform parent;
+        private readonly int maxSize;
+        private readonly bool collectionCheck;
+
+        private readonly Stack<T> pool;
+
+        // Tracks instances currently checked OUT of the pool. Used to detect
+        // double-Release in Editor builds without paying a HashSet lookup in
+        // shipping code.
+        private readonly HashSet<T> active;
+
+        public int CountInactive => pool.Count;
+        public int CountActive => active != null ? active.Count : -1;
+
+        /// <param name="prewarm">How many instances to instantiate up front.</param>
+        /// <param name="maxSize">Hard cap on how many INACTIVE instances are kept.
+        /// Excess Released instances are destroyed instead of pooled.
+        /// Set to 0 / negative for "unbounded" (not recommended on mobile/WebGL).</param>
+        /// <param name="collectionCheck">If true (default in Editor), guards against
+        /// double-Release. Disable in shipping builds for a tiny perf win.</param>
+        public SimpleObjectPool(
+            T prefab,
+            int prewarm = 0,
+            int maxSize = 128,
+            Transform parent = null,
+            bool collectionCheck = true)
+        {
+            this.prefab = prefab;
+            this.parent = parent;
+            this.maxSize = maxSize;
+            this.collectionCheck = collectionCheck;
+
+            pool = new Stack<T>(Mathf.Max(0, prewarm));
+            active = collectionCheck ? new HashSet<T>() : null;
+
+            for (int i = 0; i < prewarm; i++)
+            {
+                var instance = CreateNew();
+                instance.gameObject.SetActive(false);
+                pool.Push(instance);
+            }
+        }
+
+        public T Get()
+        {
+            T item;
+            // Skip over any pooled entries that were destroyed externally
+            // (e.g., on scene unload). This also guards against the user
+            // forgetting to call Clear() on level transitions.
+            while (pool.Count > 0)
+            {
+                item = pool.Pop();
+                if (item != null)
+                {
+                    item.gameObject.SetActive(true);
+                    if (collectionCheck) active.Add(item);
+                    if (item is IPoolable p) p.OnSpawn();
+                    return item;
+                }
+            }
+
+            item = CreateNew();
+            item.gameObject.SetActive(true);
+            if (collectionCheck) active.Add(item);
+            if (item is IPoolable poolable) poolable.OnSpawn();
+            return item;
+        }
+
+        public void Release(T item)
+        {
+            if (item == null) return;
+
+            if (collectionCheck)
+            {
+                if (!active.Remove(item))
+                {
+                    // Either never came from this pool, or already released.
+                    Debug.LogError(
+                        $"[SimpleObjectPool<{typeof(T).Name}>] Double Release or unknown instance: {item.name}",
+                        item);
+                    return;
+                }
+            }
+
+            if (item is IPoolable p) p.OnDespawn();
+            item.gameObject.SetActive(false);
+
+            if (maxSize > 0 && pool.Count >= maxSize)
+            {
+                // Pool is full; destroy excess instead of growing forever.
+                Object.Destroy(item.gameObject);
+                return;
+            }
+
+            pool.Push(item);
+        }
+
+        /// <summary>
+        /// Destroy every pooled instance and forget all checked-out tracking.
+        /// Call on level unload / scene change to avoid keeping references to
+        /// objects that Unity is about to destroy with the scene.
+        /// </summary>
+        public void Clear()
+        {
+            while (pool.Count > 0)
+            {
+                var item = pool.Pop();
+                if (item != null) Object.Destroy(item.gameObject);
+            }
+            active?.Clear();
+        }
+
+        private T CreateNew()
+        {
+            return Object.Instantiate(prefab, parent);
+        }
+    }
+}

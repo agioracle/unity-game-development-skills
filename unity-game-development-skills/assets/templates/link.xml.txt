@@ -1,0 +1,92 @@
+<!--
+  link.xml — IL2CPP / Managed Code Stripping preservation list.
+
+  Place this file at: Assets/link.xml
+  (or anywhere under Assets/ — Unity picks up every link.xml in the project.)
+
+  WHY:
+    With "Managed Stripping Level" set to Minimal / Low / Medium / High
+    (default on IL2CPP builds, including WebGL / 微信小游戏 / 抖音小游戏 /
+    iOS / Android IL2CPP), the linker removes types and methods it
+    cannot statically prove are used. Anything reached only via:
+      - Reflection (Activator.CreateInstance, Type.GetType, MakeGenericType)
+      - JSON / XML / binary deserialization (Newtonsoft.Json, System.Text.Json,
+        protobuf-net, MessagePack, etc.)
+      - SendMessage / Invoke / UnityEvent persistent listeners by string
+      - Generic value-type instantiations only constructed at runtime
+    is at risk of being stripped, and the build will fail at runtime
+    with TypeLoadException / MissingMethodException / silent null deser.
+
+  HOW THIS FILE WORKS:
+    - <assembly fullname="X" preserve="all" />
+        Keep every type and member in assembly X. Heaviest hammer.
+    - <assembly fullname="X"> <type fullname="X.Foo" preserve="all" /> </assembly>
+        Keep only X.Foo (and all its members).
+    - <type fullname="X.Foo"> <method signature="..."/> </type>
+        Keep specific methods.
+    - preserve="all" / "fields" / "methods" / "nothing" + required="true"
+        Combine for fine-grained control.
+    - "fullname" supports a trailing "*" wildcard for namespaces
+      (e.g. fullname="MyGame.Data.*").
+
+  RULE OF THUMB:
+    1. Do NOT preserve="all" on UnityEngine / mscorlib / netstandard —
+       it bloats the binary massively and defeats the point of stripping.
+    2. Preserve only types you reflect over. If you control the data model,
+       prefer source-generated serializers (System.Text.Json source-gen,
+       MemoryPack) so this file stays small.
+    3. After editing, do a clean IL2CPP build and test on-device. Editor
+       Mono build will NOT reproduce stripping issues.
+
+  See also:
+    - https://docs.unity3d.com/Manual/ManagedCodeStripping.html
+    - references/performance-platform.md → "Reflection + IL2CPP code stripping"
+-->
+<linker>
+
+  <!-- ============================================================ -->
+  <!-- 1. Your gameplay data models reached via reflection / JSON.   -->
+  <!--    Replace the namespace with your project's actual one.      -->
+  <!-- ============================================================ -->
+  <assembly fullname="Project.Runtime">
+    <!-- Whole namespace tree of serialized DTOs / config classes -->
+    <type fullname="Project.Runtime.Data.*" preserve="all" />
+
+    <!-- A single ScriptableObject loaded by name via Resources/Addressables -->
+    <!--
+    <type fullname="Project.Runtime.Configs.LevelDatabase" preserve="all" />
+    -->
+  </assembly>
+
+  <!-- ============================================================ -->
+  <!-- 2. Newtonsoft.Json — only if you actually depend on it.       -->
+  <!--    Prefer System.Text.Json source-generators when possible.   -->
+  <!-- ============================================================ -->
+  <!--
+  <assembly fullname="Newtonsoft.Json" preserve="all" />
+  -->
+
+  <!-- ============================================================ -->
+  <!-- 3. protobuf-net / MessagePack / Odin / Zenject reflection.    -->
+  <!--    Uncomment whichever applies; do NOT keep all of them.      -->
+  <!-- ============================================================ -->
+  <!--
+  <assembly fullname="protobuf-net" preserve="all" />
+  <assembly fullname="MessagePack" preserve="all" />
+  <assembly fullname="Sirenix.OdinInspector.Attributes" preserve="all" />
+  <assembly fullname="Zenject" preserve="all" />
+  -->
+
+  <!-- ============================================================ -->
+  <!-- 4. System.* generic value types instantiated only at runtime. -->
+  <!--    Example: List<MySerializableStruct> created via reflection.-->
+  <!--    Usually you don't need this if MySerializableStruct itself -->
+  <!--    is preserved above; add only if on-device errors prove it. -->
+  <!-- ============================================================ -->
+  <!--
+  <assembly fullname="mscorlib">
+    <type fullname="System.Collections.Generic.List`1" preserve="all" />
+  </assembly>
+  -->
+
+</linker>

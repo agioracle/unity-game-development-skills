@@ -1,0 +1,72 @@
+// Template: generic MonoBehaviour Singleton (Unity 6 friendly).
+// Copy to Assets/_Project/Code/Runtime/Core/MonoSingleton.cs and adapt namespace.
+//
+// Usage:
+//   public class AudioManager : MonoSingleton<AudioManager> { ... }
+//   AudioManager.Instance.PlaySfx(...);
+//
+// Notes:
+//   - Uses FindFirstObjectByType (Unity 2023+/Unity 6). FindObjectOfType is obsolete.
+//   - Resets the static reference on subsystem registration so that
+//     "Enter Play Mode Options -> Disable Domain Reload" does NOT keep a
+//     dead instance across Play Mode sessions.
+//   - OnDestroy clears the reference so additive scene unloads / scene
+//     reloads don't leak a destroyed object into Instance.
+
+using UnityEngine;
+
+namespace Project.Core
+{
+    public abstract class MonoSingleton<T> : MonoBehaviour where T : MonoSingleton<T>
+    {
+        private static T instance;
+
+        public static T Instance
+        {
+            get
+            {
+                if (instance == null)
+                {
+                    instance = FindFirstObjectByType<T>(FindObjectsInactive.Exclude);
+                    if (instance == null)
+                    {
+                        Debug.LogWarning($"[{typeof(T).Name}] No instance found in scene.");
+                    }
+                }
+                return instance;
+            }
+        }
+
+        public static bool HasInstance => instance != null;
+
+        [SerializeField] private bool persistAcrossScenes = false;
+
+        // Required when "Enter Play Mode Options -> Disable Domain Reload" is on.
+        // Without this, `instance` keeps pointing at a destroyed MonoBehaviour
+        // across Play Mode sessions and triggers MissingReferenceException.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics()
+        {
+            instance = null;
+        }
+
+        protected virtual void Awake()
+        {
+            if (instance != null && instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            instance = (T)this;
+            if (persistAcrossScenes)
+            {
+                DontDestroyOnLoad(gameObject);
+            }
+        }
+
+        protected virtual void OnDestroy()
+        {
+            if (instance == this) instance = null;
+        }
+    }
+}

@@ -1,0 +1,109 @@
+// Template: ScriptableObject-based InputReader using the new Input System.
+// Copy to Assets/_Project/Code/Runtime/Input/InputReader.cs and adapt namespace.
+//
+// Why a SO?
+//   - Decouples gameplay code from concrete `InputAction` assets.
+//   - The same InputReader asset can be referenced by Player, UI, Camera —
+//     no FindObjectOfType, no scene wiring chains.
+//   - Easy to swap (e.g., a "ReplayInputReader" SO that drives the same
+//     events from a recording).
+//
+// Setup:
+//   1. Generate a C# class from your .inputactions asset:
+//      Select the asset -> Inspector -> "Generate C# Class" -> apply.
+//      That produces e.g. `GameInput` implementing `GameInput.IGameplayActions`.
+//   2. Right-click in Project -> Create -> Game/Input/Input Reader.
+//   3. Reference the InputReader SO from PlayerController, UIManager, etc.
+//
+// Requires:
+//   com.unity.inputsystem package, and Active Input Handling = "Input System Package"
+//   (or "Both"). Switching this restarts the editor — never do it silently.
+
+#if ENABLE_INPUT_SYSTEM
+using System;
+using UnityEngine;
+using UnityEngine.InputSystem;
+
+namespace Project.Input
+{
+    [CreateAssetMenu(menuName = "Game/Input/Input Reader", fileName = "SO_InputReader")]
+    public class InputReader : ScriptableObject, GameInput.IGameplayActions, GameInput.IUIActions
+    {
+        // Gameplay events
+        public event Action<Vector2> MoveEvent;
+        public event Action JumpPressedEvent;
+        public event Action JumpReleasedEvent;
+        public event Action AttackEvent;
+        public event Action PausePressedEvent;
+
+        // UI events
+        public event Action UISubmitEvent;
+        public event Action UICancelEvent;
+
+        private GameInput input;
+
+        private void OnEnable()
+        {
+            if (input == null)
+            {
+                input = new GameInput();
+                input.Gameplay.SetCallbacks(this);
+                input.UI.SetCallbacks(this);
+            }
+            EnableGameplay();
+        }
+
+        private void OnDisable()
+        {
+            input?.Disable();
+        }
+
+        public void EnableGameplay()
+        {
+            input.UI.Disable();
+            input.Gameplay.Enable();
+        }
+
+        public void EnableUI()
+        {
+            input.Gameplay.Disable();
+            input.UI.Enable();
+        }
+
+        // --- IGameplayActions ---
+
+        public void OnMove(InputAction.CallbackContext context)
+        {
+            MoveEvent?.Invoke(context.ReadValue<Vector2>());
+        }
+
+        public void OnJump(InputAction.CallbackContext context)
+        {
+            if (context.performed) JumpPressedEvent?.Invoke();
+            else if (context.canceled) JumpReleasedEvent?.Invoke();
+        }
+
+        public void OnAttack(InputAction.CallbackContext context)
+        {
+            if (context.performed) AttackEvent?.Invoke();
+        }
+
+        public void OnPause(InputAction.CallbackContext context)
+        {
+            if (context.performed) PausePressedEvent?.Invoke();
+        }
+
+        // --- IUIActions ---
+
+        public void OnSubmit(InputAction.CallbackContext context)
+        {
+            if (context.performed) UISubmitEvent?.Invoke();
+        }
+
+        public void OnCancel(InputAction.CallbackContext context)
+        {
+            if (context.performed) UICancelEvent?.Invoke();
+        }
+    }
+}
+#endif

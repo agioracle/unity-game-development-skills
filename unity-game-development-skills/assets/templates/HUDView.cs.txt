@@ -1,0 +1,51 @@
+// Template: HUD view that listens to gameplay events and updates UI text.
+// Copy to Assets/_Project/Code/Runtime/UI/HUDView.cs and adapt namespace.
+//
+// Wire-up in Unity:
+//   - Place this on the HUD GameObject under your Canvas.
+//   - Drag ScoreText / HealthBar / TimerText into the [SerializeField] slots.
+//   - GameManager / ScoreSystem fire events; HUDView only reflects them.
+
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
+
+namespace Project.UI
+{
+    public class HUDView : MonoBehaviour
+    {
+        [Header("Refs")]
+        [SerializeField] private TMP_Text scoreText;
+        [SerializeField] private Slider healthBar;
+        [SerializeField] private TMP_Text timerText;
+
+        [Header("Format")]
+        [SerializeField] private string scoreFormat = "Score: {0}";
+        [SerializeField] private string timerFormat = "{0:00}:{1:00}";
+
+        // Hook these up from your gameplay systems.
+        // Example:
+        //   gameManager.OnScoreChanged += SetScore;
+        //   player.OnHealthChanged    += SetHealth;
+        //   timer.OnTimeChanged       += SetTime;
+
+        public void SetScore(int score)
+        {
+            if (scoreText != null) scoreText.text = string.Format(scoreFormat, score);
+        }
+
+        public void SetHealth(float ratio01)
+        {
+            if (healthBar != null) healthBar.value = Mathf.Clamp01(ratio01);
+        }
+
+        public void SetTime(float seconds)
+        {
+            if (timerText == null) return;
+            int totalSeconds = Mathf.Max(0, Mathf.FloorToInt(seconds));
+            int m = totalSeconds / 60;
+            int s = totalSeconds % 60;
+            timerText.text = string.Format(timerFormat, m, s);
+        }
+    }
+}

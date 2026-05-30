@@ -1,0 +1,80 @@
+// Template: type-safe EventBus for cross-system events.
+// Copy to Assets/_Project/Code/Runtime/Core/EventBus.cs and adapt namespace.
+//
+// Usage:
+//   EventBus.Subscribe<ScoreChangedEvent>(OnScoreChanged);
+//   EventBus.Publish(new ScoreChangedEvent { Score = 10 });
+//   EventBus.Unsubscribe<ScoreChangedEvent>(OnScoreChanged);
+//
+// Define event payloads as small structs / classes:
+//   public readonly struct ScoreChangedEvent { public readonly int Score; ... }
+//
+// Domain Reload note:
+//   With "Enter Play Mode Options -> Disable Domain Reload" enabled, static
+//   fields are NOT reset between Play Mode sessions. The handlers dictionary
+//   would otherwise carry over subscriptions from destroyed objects, causing
+//   silent NREs / MissingReferenceException on the second Play.
+//   ResetOnEnterPlayMode() below clears the dictionary on every Play.
+
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace Project.Core
+{
+    public static class EventBus
+    {
+        private static readonly Dictionary<Type, Delegate> handlers = new();
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetOnEnterPlayMode()
+        {
+            handlers.Clear();
+        }
+
+        public static void Subscribe<T>(Action<T> handler)
+        {
+            if (handler == null) return;
+            var type = typeof(T);
+            if (handlers.TryGetValue(type, out var existing))
+            {
+                handlers[type] = Delegate.Combine(existing, handler);
+            }
+            else
+            {
+                handlers[type] = handler;
+            }
+        }
+
+        public static void Unsubscribe<T>(Action<T> handler)
+        {
+            if (handler == null) return;
+            var type = typeof(T);
+            if (!handlers.TryGetValue(type, out var existing)) return;
+
+            var newDelegate = Delegate.Remove(existing, handler);
+            if (newDelegate == null) handlers.Remove(type);
+            else handlers[type] = newDelegate;
+        }
+
+        public static void Publish<T>(T evt)
+        {
+            if (!handlers.TryGetValue(typeof(T), out var existing)) return;
+            try
+            {
+                ((Action<T>)existing)?.Invoke(evt);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[EventBus] Handler for {typeof(T).Name} threw: {e}");
+            }
+        }
+
+        // Manually clear (e.g., before reloading a level) if you do not want
+        // to wait for the next Play Mode entry.
+        public static void Clear()
+        {
+            handlers.Clear();
+        }
+    }
+}

@@ -1,0 +1,126 @@
+// Template: GameManager with state machine + events.
+// Copy to Assets/_Project/Code/Runtime/Core/GameManager.cs and adapt namespace.
+//
+// Usage:
+//   - Place a single GameManager in the Boot or Game scene.
+//   - Subscribe UI / Audio / VFX systems to OnGameStateChanged.
+//   - Call StartGame() / WinGame() / LoseGame() / RestartGame() from gameplay code.
+//   - To actually reset gameplay state on Restart, listen to OnRestartRequested
+//     in your LevelManager / scoring system and reset there. The GameManager
+//     itself is intentionally kept slim and does NOT know about score/lives.
+
+using System;
+using UnityEngine;
+
+namespace Project.Core
+{
+    public enum GameState
+    {
+        None,
+        Ready,
+        Playing,
+        Paused,
+        Win,
+        Lose,
+    }
+
+    public class GameManager : MonoBehaviour
+    {
+        public static GameManager Instance { get; private set; }
+
+        [SerializeField] private bool autoStart = true;
+
+        public GameState State { get; private set; } = GameState.None;
+
+        /// <summary>Fired whenever <see cref="State"/> changes.</summary>
+        public event Action<GameState> OnGameStateChanged;
+
+        /// <summary>
+        /// Fired BEFORE re-entering <see cref="GameState.Ready"/> from a
+        /// restart request. Subscribers (LevelManager, scoring, spawners,
+        /// pools) MUST reset their runtime state here.
+        /// </summary>
+        public event Action OnRestartRequested;
+
+        // Required when "Enter Play Mode Options -> Disable Domain Reload" is on.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics()
+        {
+            Instance = null;
+        }
+
+        private void Awake()
+        {
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            Instance = this;
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this) Instance = null;
+        }
+
+        private void Start()
+        {
+            ChangeState(GameState.Ready);
+            if (autoStart)
+            {
+                StartGame();
+            }
+        }
+
+        public void StartGame()
+        {
+            ChangeState(GameState.Playing);
+        }
+
+        public void PauseGame()
+        {
+            if (State == GameState.Playing) ChangeState(GameState.Paused);
+        }
+
+        public void ResumeGame()
+        {
+            if (State == GameState.Paused) ChangeState(GameState.Playing);
+        }
+
+        public void WinGame()
+        {
+            if (State == GameState.Playing) ChangeState(GameState.Win);
+        }
+
+        public void LoseGame()
+        {
+            if (State == GameState.Playing) ChangeState(GameState.Lose);
+        }
+
+        public void RestartGame()
+        {
+            // Tell every system to reset BEFORE we flip the state machine,
+            // otherwise UI/score/pools observe Playing with stale data.
+            try
+            {
+                OnRestartRequested?.Invoke();
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[GameManager] OnRestartRequested handler threw: {e}");
+            }
+
+            ChangeState(GameState.Ready);
+            StartGame();
+        }
+
+        private void ChangeState(GameState newState)
+        {
+            if (State == newState) return;
+            State = newState;
+            Debug.Log($"[GameManager] State -> {newState}");
+            OnGameStateChanged?.Invoke(State);
+        }
+    }
+}
